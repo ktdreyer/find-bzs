@@ -32,7 +32,8 @@ def github_project():
     return m.group(1)
 
 
-def git_log(old, new):
+def git_merge_log(old, new):
+    """ Return a list of Git merge commit logs. """
     cmd = ['git', 'log', '--oneline', '%s..%s' % (old, new), '--merges',
            '--no-decorate']
     log = subprocess.check_output(cmd).strip().split("\n")
@@ -87,7 +88,7 @@ def find_all_bzs(bzapi, project, old, new):
     Return all the BZ ID numbers that correspond to PRs between "old" and
     "new" Git refs for this GitHub project. """
     result = []
-    for l in git_log(old, new):
+    for l in git_merge_log(old, new):
         m = re.search("Merge pull request #(\d+)", l)
         if not m:
             raise RuntimeError('could not parse PR from %s' % l)
