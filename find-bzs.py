@@ -18,7 +18,12 @@ NEW = 'v3.0.0rc2'
 
 
 def github_project():
-    """ returns "ceph/ceph-ansible" """
+    """
+    returns the GitHub project name for a Git clone in cwd.
+
+    For example: "ceph/ceph-ansible"
+    raises RuntimeError if the "origin" remote does not look like GitHub.
+    """
     cmd = ['git', 'remote', 'get-url', 'origin']
     url = subprocess.check_output(cmd).strip()
     m = re.match('git@github.com:(.+)', url)
@@ -35,6 +40,7 @@ def git_log(old, new):
 
 
 def get_bzapi():
+    """ Return a logged-in RHBZ API instance """
     bzapi = Bugzilla('bugzilla.redhat.com')
     if not bzapi.logged_in:
         raise SystemExit('Not logged into BZ')
