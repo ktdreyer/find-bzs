@@ -71,16 +71,35 @@ def find_by_external_tracker(bzapi, project, pr_id):
     return [int(bz['id']) for bz in result['bugs']]
 
 
-def rpm_version(version):
-    """ Return an RPM version for %changelog """
+def rpm_version(ref):
+    """ Return an RPM version for this ref for %changelog """
     # eg "3.0.0-1"
     # or "3.0.0-0.1.rc1"
+    cmd = ['git', 'describe', '--tags', ref]
+    gitdescribe = subprocess.check_output(cmd).strip()
+    try:
+        (version, commits, sha) = gitdescribe.split('-')
+    except ValueError:
+        version = gitdescribe
+        commits = None
+        sha = None
     if version.startswith('v'):
         version = version[1:]
-    if 'rc' not in version:
-        return version + '-1'
-    (first, rc) = version.split('rc')
-    return '%s-0.1.rc%s' % (first, rc)
+    if commits:
+        # This was not a tagged ref. Just do something.
+        release = '%s.%s' % (commits, sha)
+        if 'rc' in version:
+            (_, rc) = version.split('rc')
+            release = '0.1.rc%s.%s' % (rc, release)
+            version = version.replace('rc%s' % rc, '')
+    else:
+        # This was a tagged ref. Follow the Fedora pkging guidelines
+        release = 1
+        if 'rc' in version:
+            (_, rc) = version.split('rc')
+            release = '0.1.rc%s' % rc
+            version = version.replace('rc%s' % rc, '')
+    return '%s-%s' % (version, release)
 
 
 def find_all_bzs(bzapi, project, old, new):
@@ -103,6 +122,10 @@ def rpm_changelog(version, all_bzs):
     """ Return an RPM %changelog string """
     # TODO: Debian as well here?
     changes = 'Update to %s' % version
+    if not version.startswith('v'):
+        cmd = ['git', 'rev-parse', version]
+        ref = subprocess.check_output(cmd).strip()
+        changes = '%s (%s)' % (changes, ref)
     if all_bzs:
         bz_strs = ['rhbz#%d' % bz for bz in all_bzs]
         rhbzs = ', '.join(bz_strs)
