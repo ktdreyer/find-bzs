@@ -66,6 +66,9 @@ def find_by_external_tracker(bzapi, project, pr_id):
         'f2': 'ext_bz_bug_map.ext_bz_bug_id',
         'o2': 'equals',
         'v2': ext_id,
+        'f3': 'bug_status',
+        'o3': 'notequals',
+        'v3': 'CLOSED',
     }
     result = bzapi._proxy.Bug.search(payload)
     return [int(bz['id']) for bz in result['bugs']]
