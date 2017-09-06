@@ -14,7 +14,7 @@ GITHUBURL = 'https://github.com/'
 
 # These are ceph-ansible tags to compare:
 OLD = 'v3.0.0rc4'
-NEW = 'v3.0.0rc5'
+NEW = 'v3.0.0rc6'
 
 
 def github_project():
