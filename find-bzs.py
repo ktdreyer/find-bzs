@@ -12,6 +12,9 @@ Find Bugzilla numbers that correlate to new upstream tags in GitHub.
 
 GITHUBURL = 'https://github.com/'
 
+# Only query BZs in this product:
+PRODUCT = 'Red Hat Ceph Storage'
+
 # These are ceph-ansible tags to compare:
 OLD = 'v3.0.0rc6'
 NEW = 'v3.0.0rc7'
@@ -59,6 +62,7 @@ def find_by_external_tracker(bzapi, project, pr_id):
     """ Return a list of bug ID numbers for this project / PR id number. """
     ext_id = external_tracker(project, pr_id)
     payload = {
+        'product': PRODUCT,
         'include_fields': ['id', 'summary', 'status'],
         'f1': 'external_bugzilla.url',
         'o1': 'substring',
