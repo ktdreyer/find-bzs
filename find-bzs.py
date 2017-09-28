@@ -153,8 +153,17 @@ def rpm_changelog(version, all_bzs):
     )
 
 
+def links(all_bzs):
+    """ Return a string of all BZ URLs, so maintainer can visit them. """
+    urls = ['https://bugzilla.redhat.com/%i' % bz for bz in all_bzs]
+    return "\n".join(urls)
+
+
 bzapi = get_bzapi()
 project = github_project()
 all_bzs = find_all_bzs(bzapi, project, OLD, NEW)
 
 print(rpm_changelog(NEW, all_bzs))
+
+print('================')
+print(links(all_bzs))
