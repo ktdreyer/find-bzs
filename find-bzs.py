@@ -52,9 +52,14 @@ def get_bzapi():
 
 
 def external_tracker(project, pr_id):
-    """ Return an external tracker ID suitable for BZ searching. """
-    # project is eg. "ceph/ceph-ansible"
-    # ext_id is "ceph/ceph-ansible/pull/1234"
+    """
+    Return an external tracker ID suitable for BZ searching.
+
+    :param project: GitHub project, eg "ceph/ceph-ansible"
+    :param pr_id: ``int``, numerical PR ID, eg. "1234"
+    :returns: Full external tracker ID, eg "ceph/ceph-ansible/pull/1234".
+              Search Bugzilla's "External Trackers" for this value.
+    """
     return project + '/pull/' + str(pr_id)
 
 
