@@ -59,7 +59,7 @@ def external_tracker(project, pr_id):
 
 
 def find_by_external_tracker(bzapi, project, pr_id):
-    """ Return a list of bug ID numbers for this project / PR id number. """
+    """ Return a set of bug ID numbers for this project / PR id number. """
     ext_id = external_tracker(project, pr_id)
     payload = {
         'product': PRODUCT,
@@ -75,7 +75,7 @@ def find_by_external_tracker(bzapi, project, pr_id):
         'v3': 'CLOSED',
     }
     result = bzapi._proxy.Bug.search(payload)
-    return [int(bz['id']) for bz in result['bugs']]
+    return set([int(bz['id']) for bz in result['bugs']])
 
 
 def rpm_version(ref):
@@ -113,7 +113,7 @@ def find_all_bzs(bzapi, project, old, new):
     """
     Return all the BZ ID numbers that correspond to PRs between "old" and
     "new" Git refs for this GitHub project. """
-    result = []
+    result = set()
     for l in git_merge_log(old, new):
         m = re.search("Merge pull request #(\d+)", l)
         if not m:
@@ -121,7 +121,7 @@ def find_all_bzs(bzapi, project, old, new):
         pr_id = int(m.group(1))
         # print('searching for ceph-ansible PR %d' % pr_id)
         pr_bzs = find_by_external_tracker(bzapi, project, pr_id)
-        result.extend(pr_bzs)
+        result = result | pr_bzs
     return result
 
 
