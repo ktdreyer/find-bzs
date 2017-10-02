@@ -16,6 +16,8 @@ GITHUBURL = 'https://github.com/'
 PRODUCT = 'Red Hat Ceph Storage'
 
 # These are ceph-ansible tags to compare:
+# TODO: auto-determine "OLD" from ceph-3.0-rhel-7-candidate
+# TODO: auto-determine "NEW" from git-decribe
 OLD = 'v3.0.0rc13'
 NEW = 'v3.0.0rc14'
 
