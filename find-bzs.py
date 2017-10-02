@@ -16,8 +16,8 @@ GITHUBURL = 'https://github.com/'
 PRODUCT = 'Red Hat Ceph Storage'
 
 # These are ceph-ansible tags to compare:
-OLD = 'v3.0.0rc12'
-NEW = 'v3.0.0rc13'
+OLD = 'v3.0.0rc13'
+NEW = 'v3.0.0rc14'
 
 
 def github_project():
