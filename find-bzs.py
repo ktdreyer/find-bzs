@@ -173,4 +173,5 @@ all_bzs = find_all_bzs(bzapi, project, OLD, NEW)
 print(rpm_changelog(NEW, all_bzs))
 
 print('================')
+print('Links for browsing:')
 print(links(all_bzs))
