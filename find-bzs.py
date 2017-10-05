@@ -116,6 +116,33 @@ def rpm_version(ref):
     return '%s-%s' % (version, release)
 
 
+def deb_version(ref):
+    """ Return an DEB version for this ref for debian/changelog """
+    # eg "3.0.0-2redhat1"
+    # or "3.0.0~rc1-2redhat1"
+    cmd = ['git', 'describe', '--tags', ref]
+    gitdescribe = subprocess.check_output(cmd).strip()
+    try:
+        (version, commits, sha) = gitdescribe.split('-')
+    except ValueError:
+        version = gitdescribe
+        commits = None
+        sha = None
+    if version.startswith('v'):
+        version = version[1:]
+    if commits:
+        # This was not a tagged ref. Just do something.
+        # I am not sure what the Debian convention is here...
+        raise NotImplementedError()
+        # TODO: see rpm_version() for inspiration
+    else:
+        # This was a tagged ref. Follow the Debian pkging guidelines
+        release = '2redhat1'
+        if 'rc' in version:
+            version = version.replace('rc', '~rc')
+    return '%s-%s' % (version, release)
+
+
 def find_all_bzs(bzapi, project, old, new):
     """
     Return all the BZ ID numbers that correspond to PRs between "old" and
@@ -166,6 +193,22 @@ def links(all_bzs):
     return "\n".join(urls)
 
 
+def bugzilla_command(version, all_bzs):
+    """ Return a bugzilla cli string to paste & run """
+    package = 'ceph-ansible'
+    rpm_ver = rpm_version(version)
+    deb_ver = deb_version(version)
+    bzs = ' '.join(str(bz) for bz in all_bzs)
+    command = dedent("""
+    bugzilla modify -s MODIFIED -F "RHEL: {package}-{rpm_ver} Ubuntu: {package}-{deb_ver}" {bzs}
+    """)
+    return command.format(
+        package=package,
+        rpm_ver=rpm_ver,
+        deb_ver=deb_ver,
+        bzs=bzs)
+
+
 bzapi = get_bzapi()
 project = github_project()
 all_bzs = find_all_bzs(bzapi, project, OLD, NEW)
@@ -175,3 +218,7 @@ print(rpm_changelog(NEW, all_bzs))
 print('================')
 print('Links for browsing:')
 print(links(all_bzs))
+
+print('================')
+print('When RHEL and Ubuntu dist-git are committed:')
+print(bugzilla_command(NEW, all_bzs))
