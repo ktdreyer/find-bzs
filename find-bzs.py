@@ -41,6 +41,7 @@ def git_merge_log(old, new):
     """ Return a list of Git merge commit logs. """
     cmd = ['git', 'log', '--oneline', '%s..%s' % (old, new), '--merges',
            '--no-decorate']
+    # print(' '.join(cmd))
     log = subprocess.check_output(cmd).strip().split("\n")
     return log
 
