@@ -18,8 +18,8 @@ PRODUCT = 'Red Hat Ceph Storage'
 # These are ceph-ansible tags to compare:
 # TODO: auto-determine "OLD" from ceph-3.0-rhel-7-candidate
 # TODO: auto-determine "NEW" from git-decribe
-OLD = 'v3.0.0rc15'
-NEW = 'v3.0.0rc17'
+OLD = 'v3.0.0rc19'
+NEW = 'v3.0.2'
 
 
 def github_project():
