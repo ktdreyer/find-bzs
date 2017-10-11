@@ -144,16 +144,27 @@ def deb_version(ref):
     return '%s-%s' % (version, release)
 
 
-def find_all_bzs(bzapi, project, old, new):
+def find_all_prs(old, new):
     """
-    Return all the BZ ID numbers that correspond to PRs between "old" and
-    "new" Git refs for this GitHub project. """
+    Return all the PR ID numbers that correspond to PRs between "old" and
+    "new" Git refs for this GitHub project.
+    """
     result = set()
     for l in git_merge_log(old, new):
         m = re.search("Merge pull request #(\d+)", l)
         if not m:
             raise RuntimeError('could not parse PR from %s' % l)
         pr_id = int(m.group(1))
+        result.add(pr_id)
+    return result
+
+
+def find_all_bzs(bzapi, project, old, new):
+    """
+    Return all the BZ ID numbers that correspond to PRs between "old" and
+    "new" Git refs for this GitHub project. """
+    result = set()
+    for pr_id in find_all_prs(old, new):
         # print('searching for ceph-ansible PR %d' % pr_id)
         pr_bzs = find_by_external_tracker(bzapi, project, pr_id)
         result = result | pr_bzs
