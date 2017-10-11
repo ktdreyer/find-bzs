@@ -156,6 +156,22 @@ def find_all_prs(old, new):
             raise RuntimeError('could not parse PR from %s' % l)
         pr_id = int(m.group(1))
         result.add(pr_id)
+        # Discover a the original PR as well (if it exists):
+        # XXX: This is a quick hack. It relies on the upstream maintainer using
+        # PR branches following the naming pattern in ceph-ansible's
+        # contrib/backport_to_stable_branch.sh script.
+        # For example, if we have a log:
+        #    Merge pull request #2032 from ceph/2029-bkp
+        # This means #2032 is the backport PR, probably missing from BZ,
+        # whereas #2029 is the original PR to master, probably linked in BZ.
+        # A more complete solution would be:
+        # 1) read the logs of all commits in this merge,
+        # 2) Parse the "cherry-picked from" lines and collect all the shas,
+        # 3) Find the PR numbers (ie, on master) that correlated to those shas.
+        m = re.search("from ceph/(\d+)-bkp$", l)
+        if m:
+            pr_id = int(m.group(1))
+            result.add(pr_id)
     return result
 
 
