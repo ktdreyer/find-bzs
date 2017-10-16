@@ -228,7 +228,7 @@ def bugzilla_command(version, all_bzs):
     deb_ver = deb_version(version)
     bzs = ' '.join(str(bz) for bz in all_bzs)
     command = dedent("""
-    bugzilla modify -s MODIFIED -F "RHEL: {package}-{rpm_ver} Ubuntu: {package}-{deb_ver}" {bzs}
+    bugzilla modify -s MODIFIED -F "RHEL: {package}-{rpm_ver}.el7cp Ubuntu: {package}_{deb_ver}" {bzs}
     """)
     return command.format(
         package=package,
