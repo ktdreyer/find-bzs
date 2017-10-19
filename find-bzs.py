@@ -1,7 +1,9 @@
 #!/usr/bin/python
 from __future__ import print_function
 import subprocess
+import os
 import re
+import sys
 from bugzilla import Bugzilla
 from textwrap import TextWrapper, dedent
 import time
@@ -37,10 +39,13 @@ def github_project():
     return m.group(1)
 
 
-def git_merge_log(old, new):
-    """ Return a list of Git merge commit logs. """
-    cmd = ['git', 'log', '--oneline', '%s..%s' % (old, new), '--merges',
-           '--no-decorate']
+def git_log(old, new, merges):
+    """ Return a list of Git commit logs. """
+    cmd = ['git', 'log', '%s..%s' % (old, new), '--no-decorate']
+    if merges:
+        cmd.extend(['--merges', '--oneline'])
+    else:
+        cmd.append('--no-merges')
     # print(' '.join(cmd))
     log = subprocess.check_output(cmd).strip().split("\n")
     return log
@@ -144,33 +149,59 @@ def deb_version(ref):
     return '%s-%s' % (version, release)
 
 
+def find_pr_for_sha(sha):
+    """ Return PR int where this sha was merged. """
+
+    # Requires a special .git/config option, fetching all PR refs into origin.
+    # https://stackoverflow.com/questions/17818167/find-a-pull-request-on-github-where-a-commit-was-originally-created
+    # git config --add remote.origin.fetch +refs/pull/*/head:refs/remotes/origin/pull/*  # NOQA: E501
+
+    # Only run this if we don't have a local copy of this sha:
+    cmd = ['git', 'cat-file', '-e', '%s^{commit}' % sha]
+    with open(os.devnull, 'w') as FNULL:
+        retcode = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+    if retcode != 0:
+        output = subprocess.check_call(['git', 'fetch', 'origin'])
+
+    cmd = ['git', 'describe', '--all', '--contains', sha]
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+    if sys.version_info >= (3, 0):
+        output = output.decode('utf-8')
+    output = output.splitlines()
+    if len(output) > 1:
+        raise RuntimeError('too many lines in %s' % output)
+    if output[0].startswith('Could not get sha1'):
+        raise RuntimeError('could not find %s' % sha)
+    m = re.match('remotes/origin/pull/(\d+)', output[0])
+    if not m:
+        raise RuntimeError('could not find PR ID number in %s' % output)
+    id_ = int(m.group(1))
+    return id_
+
+
 def find_all_prs(old, new):
     """
     Return all the PR ID numbers that correspond to PRs between "old" and
     "new" Git refs for this GitHub project.
     """
     result = set()
-    for l in git_merge_log(old, new):
-        m = re.search("Merge pull request #(\d+)", l)
+    # XXX: I wonder if we could reduce the two loops into one here, and just
+    # use the single find_pr_for_sha() method for everything.
+    for line in git_log(old, new, merges=True):
+        m = re.search("Merge pull request #(\d+)", line)
         if not m:
-            raise RuntimeError('could not parse PR from %s' % l)
+            raise RuntimeError('could not parse PR from %s' % line)
         pr_id = int(m.group(1))
         result.add(pr_id)
+    for line in git_log(old, new, merges=False):
         # Discover a the original PR as well (if it exists):
-        # XXX: This is a quick hack. It relies on the upstream maintainer using
-        # PR branches following the naming pattern in ceph-ansible's
-        # contrib/backport_to_stable_branch.sh script.
-        # For example, if we have a log:
-        #    Merge pull request #2032 from ceph/2029-bkp
-        # This means #2032 is the backport PR, probably missing from BZ,
-        # whereas #2029 is the original PR to master, probably linked in BZ.
-        # A more complete solution would be:
-        # 1) read the logs of all commits in this merge,
-        # 2) Parse the "cherry-picked from" lines and collect all the shas,
+        # 1) read the logs of all commits in this range,
+        # 2) Parse the "cherry picked from" lines and collect all the shas,
         # 3) Find the PR numbers (ie, on master) that correlated to those shas.
-        m = re.search("from ceph/(\d+)-bkp$", l)
+        m = re.search("cherry picked from commit (\w+)", line)
         if m:
-            pr_id = int(m.group(1))
+            sha = m.group(1)
+            pr_id = find_pr_for_sha(sha)
             result.add(pr_id)
     return result
 
