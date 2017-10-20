@@ -170,7 +170,7 @@ def find_pr_for_sha(sha):
     output = output.splitlines()
     if len(output) > 1:
         raise RuntimeError('too many lines in %s' % output)
-    if output[0].startswith('Could not get sha1'):
+    if output[0].startswith('Could not get'):
         raise RuntimeError('could not find %s' % sha)
     m = re.match('remotes/origin/pull/(\d+)', output[0])
     if not m:
