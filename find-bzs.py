@@ -171,7 +171,11 @@ def find_pr_for_sha(sha):
     if len(output) > 1:
         raise RuntimeError('too many lines in %s' % output)
     if output[0].startswith('Could not get'):
-        raise RuntimeError('could not find %s' % sha)
+        # In this case, it was probably a bogus "cherry picked from" line.
+        # This may be an accident when the developer cherry-picks from other
+        # work-in-progress branches. Don't treat it as fatal for now.
+        print('warning: could not find PR for %s' % sha)
+        return None
     m = re.match('remotes/origin/pull/(\d+)', output[0])
     if not m:
         raise RuntimeError('could not find PR ID number in %s' % output[0])
@@ -202,7 +206,8 @@ def find_all_prs(old, new):
         if m:
             sha = m.group(1)
             pr_id = find_pr_for_sha(sha)
-            result.add(pr_id)
+            if pr_id:
+                result.add(pr_id)
     return result
 
 
