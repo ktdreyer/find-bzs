@@ -174,7 +174,7 @@ def find_pr_for_sha(sha):
         raise RuntimeError('could not find %s' % sha)
     m = re.match('remotes/origin/pull/(\d+)', output[0])
     if not m:
-        raise RuntimeError('could not find PR ID number in %s' % output)
+        raise RuntimeError('could not find PR ID number in %s' % output[0])
     id_ = int(m.group(1))
     return id_
 
