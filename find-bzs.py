@@ -279,6 +279,12 @@ all_bzs = find_all_bzs(bzapi, project, OLD, NEW)
 
 print(rpm_changelog(NEW, all_bzs))
 
+# TODO: if this is not an rc, print the rdopkg command to run:
+# rdopkg new-version 3.0.8 -B "rhbz#1507907"
+
+# TODO: and the rhcephpkg command:
+# rhcephpke new-version -B "rhbz#1507907"
+
 print('================')
 print('Links for browsing:')
 print(links(all_bzs))
