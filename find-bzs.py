@@ -257,6 +257,36 @@ def links(all_bzs):
     return "\n".join(urls)
 
 
+def rhcephpkg_command(all_bzs):
+    rhbzs = ''
+    if all_bzs:
+        bz_strs = ['rhbz#%d' % bz for bz in all_bzs]
+        rhbzs = ' '.join(bz_strs)
+    result = 'rhcephpkg new-version'
+    if rhbzs:
+        result += ' -B "%s"' % rhbzs
+    return result
+
+
+def rdopkg_command(version, all_bzs):
+    """
+    Return a rdopkg cli string to paste & run
+
+    For example:
+    rdopkg new-version 3.0.8 -B "rhbz#1507907"
+    """
+    rhbzs = ''
+    if version.startswith('v'):
+        version = version[1:]
+    if all_bzs:
+        bz_strs = ['rhbz#%d' % bz for bz in all_bzs]
+        rhbzs = ' '.join(bz_strs)
+    result = 'rdopkg new-version %s' % version
+    if rhbzs:
+        result += ' -B "%s"' % rhbzs
+    return result
+
+
 def bugzilla_command(version, all_bzs):
     """ Return a bugzilla cli string to paste & run """
     package = 'ceph-ansible'
@@ -277,13 +307,18 @@ bzapi = get_bzapi()
 project = github_project()
 all_bzs = find_all_bzs(bzapi, project, OLD, NEW)
 
+
+print('================')
 print(rpm_changelog(NEW, all_bzs))
 
-# TODO: if this is not an rc, print the rdopkg command to run:
-# rdopkg new-version 3.0.8 -B "rhbz#1507907"
+if 'rc' not in NEW:
+    print('Command for RHEL dist-git:')
+    print('================')
+    print(rdopkg_command(NEW, all_bzs))
 
-# TODO: and the rhcephpkg command:
-# rhcephpke new-version -B "rhbz#1507907"
+print('================')
+print('Command for Ubuntu dist-git:')
+print(rhcephpkg_command(all_bzs))
 
 print('================')
 print('Links for browsing:')

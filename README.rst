@@ -22,18 +22,29 @@ Update your local ceph-ansible clone::
 And run the ``find-bzs.py`` script in your up-to-date clone directory::
 
     $ ../find-bzs/find-bzs.py
-    warning: could not find PR for 302e563601cd6820b1ae44fabdfb1506688c7c9b
+    ================
 
-    * Fri Oct 20 2017 Ken Dreyer <kdreyer@redhat.com> - 3.0.4-1
-    - Update to v3.0.4 (rhbz#1500470)
+    * Mon Nov 13 2017 Ken Dreyer <kdreyer@redhat.com> - 3.0.11-1
+    - Update to v3.0.11 (rhbz#1512538, rhbz#1511811, rhbz#1510906,
+      rhbz#1509230)
 
+    Command for RHEL dist-git:
+    ================
+    rdopkg new-version 3.0.11 -B "rhbz#1512538 rhbz#1511811 rhbz#1510906 rhbz#1509230"
+    ================
+    Command for Ubuntu dist-git:
+    rhcephpkg new-version -B "rhbz#1512538 rhbz#1511811 rhbz#1510906 rhbz#1509230"
     ================
     Links for browsing:
-    https://bugzilla.redhat.com/1500470
+    https://bugzilla.redhat.com/1512538
+    https://bugzilla.redhat.com/1511811
+    https://bugzilla.redhat.com/1510906
+    https://bugzilla.redhat.com/1509230
     ================
     When RHEL and Ubuntu dist-git are committed:
 
-    bugzilla modify -s MODIFIED -F "RHEL: ceph-ansible-3.0.4-1.el7cp Ubuntu: ceph-ansible_3.0.4-2redhat1" 1500470
+    bugzilla modify -s MODIFIED -F "RHEL: ceph-ansible-3.0.11-1.el7cp Ubuntu: ceph-ansible_3.0.11-2redhat1" 1512538 1511811 1510906 1509230
+
 
 The output gives you a ``%changelog`` entry to paste into the .spec file, and a
 link for browsing the bugs to visually inspect them. The python-bugzilla
