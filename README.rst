@@ -35,11 +35,8 @@ And run the ``find-bzs.py`` script in your up-to-date clone directory::
     Command for Ubuntu dist-git:
     rhcephpkg new-version -B "rhbz#1512538 rhbz#1511811 rhbz#1510906 rhbz#1509230"
     ================
-    Links for browsing:
-    https://bugzilla.redhat.com/1512538
-    https://bugzilla.redhat.com/1511811
-    https://bugzilla.redhat.com/1510906
-    https://bugzilla.redhat.com/1509230
+    Query for browsing:
+    https://bugzilla.redhat.com/buglist.cgi?bug_id=1512538,1511811,1510906,1509230
     ================
     When RHEL and Ubuntu dist-git are committed:
 

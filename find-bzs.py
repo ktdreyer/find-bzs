@@ -310,10 +310,10 @@ def rpm_changelog(version, all_bzs):
     )
 
 
-def links(all_bzs):
-    """ Return a string of all BZ URLs, so maintainer can visit them. """
-    urls = ['https://bugzilla.redhat.com/%i' % bz for bz in all_bzs]
-    return "\n".join(urls)
+def query_link(all_bzs):
+    """ Return a query URL for all BZs, so the maintainer can visit them. """
+    idstr = ','.join([str(bz) for bz in all_bzs])
+    return 'https://bugzilla.redhat.com/buglist.cgi?bug_id=%s' % idstr
 
 
 def rhcephpkg_command(all_bzs):
@@ -380,8 +380,8 @@ print('Command for Ubuntu dist-git:')
 print(rhcephpkg_command(all_bzs))
 
 print('================')
-print('Links for browsing:')
-print(links(all_bzs))
+print('Query for browsing:')
+print(query_link(all_bzs))
 
 print('================')
 print('When RHEL and Ubuntu dist-git are committed:')
