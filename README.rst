@@ -49,3 +49,6 @@ And run the ``find-bzs.py`` script in your up-to-date clone directory::
 The output gives you a ``%changelog`` entry to paste into the .spec file, and a
 link for browsing the bugs to visually inspect them. The python-bugzilla
 command will change the bug to MODIFIED and populate Fixed In Version.
+
+Note: you must provide your GitHub user API token as a single line in
+``~/.githubtoken`` so find-bzs can authenticate to the search API.
