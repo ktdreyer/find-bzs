@@ -1,9 +1,12 @@
 #!/usr/bin/python
 from __future__ import print_function
+import errno
+import json
 import subprocess
 import os
 import re
-import sys
+import requests
+from time import sleep
 from bugzilla import Bugzilla
 from textwrap import TextWrapper, dedent
 import time
@@ -13,6 +16,11 @@ Find Bugzilla numbers that correlate to new upstream tags in GitHub.
 """
 
 GITHUBURL = 'https://github.com/'
+GITHUBAPI = 'https://api.github.com/'
+SEARCH = GITHUBAPI + 'search/issues?q=sha:{sha}+type:pr+is:merged+repo:{project}'  # NOQA: E501
+TOKENFILE = os.path.expanduser('~/.githubtoken')
+CACHEDIR = os.path.expanduser('~/.cache/find-bzs')
+rate_limit = None
 
 # Only query BZs in this product:
 PRODUCT = 'Red Hat Ceph Storage'
@@ -39,16 +47,29 @@ def github_project():
     return m.group(1)
 
 
-def git_log(old, new, merges):
-    """ Return a list of Git commit logs. """
+def find_shas(old, new):
+    """
+    Find a set of Git shas (direct and cherry-picked).
+
+    :param old:  Old Git ref, eg. "v3.0.0"
+    :param new:  New Git ref, eg. "v3.0.1"
+    """
     cmd = ['git', 'log', '%s..%s' % (old, new), '--no-decorate']
-    if merges:
-        cmd.extend(['--merges', '--oneline'])
-    else:
-        cmd.append('--no-merges')
     # print(' '.join(cmd))
-    log = subprocess.check_output(cmd).strip().split("\n")
-    return log
+    output = subprocess.check_output(cmd)
+    shas = set()
+    for line in output.strip().split("\n"):
+        # Direct sha1 for this commit:
+        m = re.match("commit (\w+)$", line)
+        if m:
+            sha = m.group(1)
+            shas.add(sha)
+        # "cherry picked from sha1" in git commit log text:
+        m = re.search("cherry picked from commit (\w+)", line)
+        if m:
+            sha = m.group(1)
+            shas.add(sha)
+    return shas
 
 
 def get_bzapi():
@@ -149,66 +170,102 @@ def deb_version(ref):
     return '%s-%s' % (version, release)
 
 
-def find_pr_for_sha(sha):
+def find_cached_sha(sha):
+    """ Return the parsed cached contents for this sha, or None. """
+    cachefile = os.path.join(CACHEDIR, 'sha-%s' % sha)
+    try:
+        with open(cachefile, 'r') as f:
+            return json.load(f)
+    except (OSError, IOError) as e:
+        if e.errno != errno.ENOENT:
+            raise
+
+
+def cache_sha(sha, data):
+    try:
+        os.makedirs(CACHEDIR)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+    cachefile = os.path.join(CACHEDIR, 'sha-%s' % sha)
+    with open(cachefile, 'w') as f:
+        json.dump(data, f)
+
+
+def github_token():
+    """ Read token from ~/.githubtoken """
+    token = None
+    with open(TOKENFILE, 'r') as fh:
+        for line in fh:
+            if line.strip() == '' or line.lstrip().startswith('#'):
+                continue
+            if token is not None:
+                raise ValueError('too many lines in %s' % TOKENFILE)
+            token = line.strip()
+    return token
+
+
+def github_get(url):
+    """ Get an API endpoint according to the search API rate limit """
+    global rate_limit
+    headers = {'Authorization': 'token %s' % github_token()}
+    # Note search API requests are quite limited.
+    # https://developer.github.com/v3/rate_limit/
+    if rate_limit is None or rate_limit == 0:
+        # print('Looking up GitHub API Rate remaining')
+        rl_url = GITHUBAPI + 'rate_limit'
+        r = requests.get(rl_url, headers=headers)
+        data = r.json()
+        rate_limit = data['resources']['search']['remaining']
+    if rate_limit == 0:
+        print('Exhausted GitHub search API rate.')
+        now = time.time()
+        reset = data['resources']['search']['reset']
+        diff = reset - now
+        print('Sleeping %d seconds until the search API rate resets.' % diff)
+        time.sleep(diff)
+    r = requests.get(url, headers=headers)
+    # GitHub provides headers alongside all API responses:
+    # 'X-RateLimit-Limit': '30',
+    # 'X-RateLimit-Remaining': '0',
+    # 'X-RateLimit-Reset': '1513879151',
+    rate_limit = int(r.headers['X-RateLimit-Remaining'])
+    return r
+
+
+def find_pr_for_sha(sha, project):
     """ Return PR int where this sha was merged. """
-
-    # Requires a special .git/config option, fetching all PR refs into origin.
-    # https://stackoverflow.com/questions/17818167/find-a-pull-request-on-github-where-a-commit-was-originally-created
-    # git config --add remote.origin.fetch +refs/pull/*/head:refs/remotes/origin/pull/*  # NOQA: E501
-
-    # Only run this if we don't have a local copy of this sha:
-    cmd = ['git', 'cat-file', '-e', '%s^{commit}' % sha]
-    with open(os.devnull, 'w') as FNULL:
-        retcode = subprocess.call(cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-    if retcode != 0:
-        output = subprocess.check_call(['git', 'fetch', 'origin'])
-
-    cmd = ['git', 'describe', '--all', '--contains', sha]
-    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-    if sys.version_info >= (3, 0):
-        output = output.decode('utf-8')
-    output = output.splitlines()
-    if len(output) > 1:
-        raise RuntimeError('too many lines in %s' % output)
-    if output[0].startswith('Could not get'):
+    data = find_cached_sha(sha)
+    if not data:
+        # print('querying api.github.com for %s' % sha)
+        url = SEARCH.format(sha=sha, project=project)
+        r = github_get(url)
+        r.raise_for_status()
+        data = r.json()
+        cache_sha(sha, data)
+    if data['total_count'] < 1:
         # In this case, it was probably a bogus "cherry picked from" line.
         # This may be an accident when the developer cherry-picks from other
         # work-in-progress branches. Don't treat it as fatal for now.
-        print('warning: could not find PR for %s' % sha)
-        return None
-    m = re.match('remotes/origin/pull/(\d+)', output[0])
-    if not m:
-        raise RuntimeError('could not find PR ID number in %s' % output[0])
-    id_ = int(m.group(1))
-    return id_
+        print('warning: could not find merged PR for %s' % sha)
+    if data['total_count'] > 1:
+        print(url)  # debugging
+        raise RuntimeError('mutiple %s PRs for %s' % (project, sha))
+    item = data['items'][0]
+    return item['number']
 
 
-def find_all_prs(old, new):
+def find_all_prs(old, new, project):
     """
     Return all the PR ID numbers that correspond to PRs between "old" and
     "new" Git refs for this GitHub project.
     """
-    result = set()
-    # XXX: I wonder if we could reduce the two loops into one here, and just
-    # use the single find_pr_for_sha() method for everything.
-    for line in git_log(old, new, merges=True):
-        m = re.search("Merge pull request #(\d+)", line)
-        if not m:
-            raise RuntimeError('could not parse PR from %s' % line)
-        pr_id = int(m.group(1))
-        result.add(pr_id)
-    for line in git_log(old, new, merges=False):
-        # Discover a the original PR as well (if it exists):
-        # 1) read the logs of all commits in this range,
-        # 2) Parse the "cherry picked from" lines and collect all the shas,
-        # 3) Find the PR numbers (ie, on master) that correlated to those shas.
-        m = re.search("cherry picked from commit (\w+)", line)
-        if m:
-            sha = m.group(1)
-            pr_id = find_pr_for_sha(sha)
-            if pr_id:
-                result.add(pr_id)
-    return result
+    prs = set()
+    for sha in find_shas(old, new):
+        pr_id = find_pr_for_sha(sha, project)
+        if pr_id:
+            prs.add(pr_id)
+    return prs
 
 
 def find_all_bzs(bzapi, project, old, new):
@@ -216,7 +273,9 @@ def find_all_bzs(bzapi, project, old, new):
     Return all the BZ ID numbers that correspond to PRs between "old" and
     "new" Git refs for this GitHub project. """
     result = set()
-    for pr_id in find_all_prs(old, new):
+    all_prs = find_all_prs(old, new, project)
+    print('Searching Bugzilla for %d pull requests' % len(all_prs))
+    for pr_id in all_prs:
         # print('searching for ceph-ansible PR %d' % pr_id)
         pr_bzs = find_by_external_tracker(bzapi, project, pr_id)
         result = result | pr_bzs
