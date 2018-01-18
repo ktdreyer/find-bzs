@@ -6,7 +6,6 @@ import subprocess
 import os
 import re
 import requests
-from time import sleep
 from bugzilla import Bugzilla
 from textwrap import TextWrapper, dedent
 import time
