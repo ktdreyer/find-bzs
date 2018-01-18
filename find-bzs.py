@@ -221,6 +221,7 @@ def github_get(url):
         now = time.time()
         reset = data['resources']['search']['reset']
         diff = reset - now
+        diff += 1  # pad our sleep a bit
         print('Sleeping %d seconds until the search API rate resets.' % diff)
         time.sleep(diff)
     r = requests.get(url, headers=headers)
