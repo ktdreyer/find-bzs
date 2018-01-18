@@ -247,6 +247,7 @@ def find_pr_for_sha(sha, project):
         # This may be an accident when the developer cherry-picks from other
         # work-in-progress branches. Don't treat it as fatal for now.
         print('warning: could not find merged PR for %s' % sha)
+        return None
     if data['total_count'] > 1:
         print(url)  # debugging
         raise RuntimeError('mutiple %s PRs for %s' % (project, sha))
