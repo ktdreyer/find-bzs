@@ -15,6 +15,12 @@ import time
 Find Bugzilla numbers that correlate to new upstream tags in GitHub.
 """
 
+# These are ceph-ansible tags to compare:
+# TODO: auto-determine "OLD" from ceph-3.0-rhel-7-candidate
+# TODO: auto-determine "NEW" from git-decribe
+OLD = 'v3.0.16'
+NEW = 'v3.0.17'
+
 GITHUBURL = 'https://github.com/'
 GITHUBAPI = 'https://api.github.com/'
 SEARCH = GITHUBAPI + 'search/issues?q=sha:{sha}+type:pr+is:merged+repo:{project}'  # NOQA: E501
@@ -24,12 +30,6 @@ rate_limit = None
 
 # Only query BZs in this product:
 PRODUCT = 'Red Hat Ceph Storage'
-
-# These are ceph-ansible tags to compare:
-# TODO: auto-determine "OLD" from ceph-3.0-rhel-7-candidate
-# TODO: auto-determine "NEW" from git-decribe
-OLD = 'v3.0.16'
-NEW = 'v3.0.17'
 
 
 def github_project():
