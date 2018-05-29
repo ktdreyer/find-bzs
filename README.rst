@@ -53,3 +53,11 @@ GitHub Token
 Note: you must provide your `GitHub Personal Access Token
 <https://github.com/settings/tokens>`_ as a single line in ``~/.githubtoken``
 so find-bzs can authenticate to the search API.
+
+::
+    $ cat ~/.githubtoken
+    aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
+
+The token does not need any special permissions. ``find-bzs.py`` uses this
+token to query GitHub's search API at a faster rate than GitHub permits for
+anonymous clients.
