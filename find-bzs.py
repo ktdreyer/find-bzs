@@ -240,6 +240,8 @@ def find_pr_for_sha(sha, project):
         # print('querying api.github.com for %s' % sha)
         url = SEARCH.format(sha=sha, project=project)
         r = github_get(url)
+        if r.status_code != requests.codes.ok:
+            print(r.json())
         r.raise_for_status()
         data = r.json()
         cache_sha(sha, data)
