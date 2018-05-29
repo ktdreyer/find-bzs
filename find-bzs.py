@@ -43,7 +43,10 @@ def github_project():
     m = re.match('git@github.com:(.+)', url)
     if not m:
         raise RuntimeError('could not parse remote url %s' % url)
-    return m.group(1)
+    project = m.group(1)
+    if project.endswith('.git'):
+        return project[:-4]
+    return project
 
 
 def find_shas(old, new):
