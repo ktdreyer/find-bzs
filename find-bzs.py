@@ -298,7 +298,7 @@ def rpm_changelog(version, all_bzs):
         changes = '%s (%s)' % (changes, ref)
     if all_bzs:
         bz_strs = ['rhbz#%d' % bz for bz in all_bzs]
-        rhbzs = ', '.join(bz_strs)
+        rhbzs = ' '.join(bz_strs)
         changes = '%s (%s)' % (changes, rhbzs)
     wrapper = TextWrapper(initial_indent='- ', subsequent_indent='  ')
     changes = wrapper.fill(changes)
