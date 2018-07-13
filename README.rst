@@ -55,6 +55,7 @@ Note: you must provide your `GitHub Personal Access Token
 so find-bzs can authenticate to the search API.
 
 ::
+
     $ cat ~/.githubtoken
     aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d
 
