@@ -18,7 +18,7 @@ Find Bugzilla numbers that correlate to new upstream tags in GitHub.
 # TODO: auto-determine "OLD" from ceph-3.0-rhel-7-candidate
 # TODO: auto-determine "NEW" from git-decribe
 OLD = 'v3.1.0rc10'
-OLD = 'v3.1.0rc11'
+NEW = 'v3.1.0rc11'
 
 GITHUBURL = 'https://github.com/'
 GITHUBAPI = 'https://api.github.com/'
