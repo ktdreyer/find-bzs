@@ -161,9 +161,10 @@ def deb_version(ref):
         version = version[1:]
     if commits:
         # This was not a tagged ref. Just do something.
-        # I am not sure what the Debian convention is here...
-        raise NotImplementedError()
-        # TODO: see rpm_version() for inspiration
+        # I am not sure what the Debian convention is here.
+        # Just going with this for now.
+        release = '%s.%s' % (commits, sha)
+        version = version.replace('rc', '~rc')
     else:
         # This was a tagged ref. Follow the Debian pkging guidelines
         release = '2redhat1'
