@@ -50,7 +50,7 @@ def github_project(remote):
     url = subprocess.check_output(cmd).strip()
     m = re.match('git@github.com:(.+)', url)
     if not m:
-        m = re.match('https://github.com/(.+)', url)
+        m = re.match('(?:https|git)://github.com/(.+)', url)
     if not m:
         raise GitHubProjectError('could not parse GitHub remote url %s' % url)
     project = m.group(1)
