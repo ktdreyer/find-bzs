@@ -10,6 +10,9 @@ tricky to understand exactly which BZs are fixed in each new upstream version.
 When a developer wants to rebase a package from one Git tag to another, this
 tool provides a report about which RHBZs would be fixed during the rebase.
 
+Example Use
+-----------
+
 For example: let's say we're rebasing the ceph-ansible package from the
 upstream "v3.0.3" Git tag to "v3.0.4".
 
