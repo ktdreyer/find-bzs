@@ -16,13 +16,16 @@ Example Use
 For example: let's say we're rebasing the ceph-ansible package from the
 upstream "v3.0.3" Git tag to "v3.0.4".
 
-Update your local ceph-ansible clone::
+Clone ceph-ansible from GitHub::
 
-    $ cd ~/dev/ceph-ansible
-    $ git checkout stable-3.0
-    $ git pull
+    $ cd ~/dev/
+    $ git clone https://github.com/ceph/ceph-ansible
+    $ cd ceph-ansible
 
-And run the ``find-bzs.py`` script in your up-to-date clone directory::
+(If you've already cloned ceph-ansible, just ``git pull`` to fetch all the
+latest updates and tags.)
+
+Now run the ``find-bzs.py`` script in your up-to-date clone directory::
 
     $ ../find-bzs/find-bzs.py
     ================
