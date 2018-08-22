@@ -42,10 +42,14 @@ def github_project():
     url = subprocess.check_output(cmd).strip()
     m = re.match('git@github.com:(.+)', url)
     if not m:
+        m = re.match('https://github.com/(.+)', url)
+    if not m:
         raise RuntimeError('could not parse remote url %s' % url)
     project = m.group(1)
     if project.endswith('.git'):
         return project[:-4]
+    if project.endswith('/'):
+        return project[:-1]
     return project
 
 
