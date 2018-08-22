@@ -44,7 +44,7 @@ def github_project():
     if not m:
         m = re.match('https://github.com/(.+)', url)
     if not m:
-        raise RuntimeError('could not parse remote url %s' % url)
+        raise RuntimeError('could not parse GitHub remote url %s' % url)
     project = m.group(1)
     if project.endswith('.git'):
         return project[:-4]
