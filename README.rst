@@ -68,3 +68,16 @@ so find-bzs can authenticate to the search API.
 The token does not need any special permissions. ``find-bzs.py`` uses this
 token to query GitHub's search API at a faster rate than GitHub permits for
 anonymous clients.
+
+Git directory
+-------------
+
+``find-bzs.py`` must operate in a Git clone of ceph-ansible. It will first
+check the ``origin`` remote to find the GitHub project (in order to query
+Bugzilla). If ``origin`` does not look like GitHub, it will fall back to
+checking the ``upstream`` remote.
+
+This means that if you've added GitHub as an ``upstream`` remote to a dist-git
+repository (like for rdopkg), you can use ``find-bzs.py`` in that dist-git
+repository. Just remember to ``git fetch upstream`` to fetch all the latest Git
+tags from GitHub.
