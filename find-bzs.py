@@ -31,26 +31,49 @@ rate_limit = None
 PRODUCT = 'Red Hat Ceph Storage'
 
 
-def github_project():
+class GitHubProjectError(Exception):
+    """ Error determining the GitHub project """
+    pass
+
+
+def github_project(remote):
     """
     returns the GitHub project name for a Git clone in cwd.
 
     For example: "ceph/ceph-ansible"
-    raises RuntimeError if the "origin" remote does not look like GitHub.
+
+    :param remote: remote name, eg "origin" or "upstream".
+    :returns: The project name, eg. "ceph/ceph-ansible".
+    :raises: GitHubProjectError if the named remote does not look like GitHub.
     """
-    cmd = ['git', 'remote', 'get-url', 'origin']
+    cmd = ['git', 'remote', 'get-url', remote]
     url = subprocess.check_output(cmd).strip()
     m = re.match('git@github.com:(.+)', url)
     if not m:
         m = re.match('https://github.com/(.+)', url)
     if not m:
-        raise RuntimeError('could not parse GitHub remote url %s' % url)
+        raise GitHubProjectError('could not parse GitHub remote url %s' % url)
     project = m.group(1)
     if project.endswith('.git'):
         return project[:-4]
     if project.endswith('/'):
         return project[:-1]
     return project
+
+
+def find_github_project():
+    """
+    Determine our GitHub project name from the "origin" remote, falling back
+    to the "upstream" remote.
+
+    :returns: The project name, eg. "ceph/ceph-ansible", or None if we could
+              not parse this remote URL.
+    :raises: GitHubProjectError if the neither remote looks like GitHub.
+    """
+    try:
+        return github_project('origin')
+    except GitHubProjectError:
+        return github_project('upstream')
 
 
 def find_shas(old, new):
@@ -374,7 +397,7 @@ def bugzilla_command(version, all_bzs):
 
 
 bzapi = get_bzapi()
-project = github_project()
+project = find_github_project()
 all_bzs = find_all_bzs(bzapi, project, OLD, NEW)
 
 
