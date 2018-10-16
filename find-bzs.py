@@ -165,10 +165,12 @@ def rpm_version(ref):
     else:
         # This was a tagged ref. Follow the Fedora pkging guidelines
         release = 1
-        if 'rc' in version:
-            (_, rc) = version.split('rc')
-            release = '0.1.rc%s' % rc
-            version = version.replace('rc%s' % rc, '')
+        for milestone in ('beta', 'rc'):
+            if milestone in version:
+                (_, mstone_value) = version.split(milestone)
+                release = '0.1.' + milestone + mstone_value
+                version = version.replace(milestone + mstone_value, '')
+                break
     return '%s-%s' % (version, release)
 
 
@@ -191,12 +193,13 @@ def deb_version(ref):
         # I am not sure what the Debian convention is here.
         # Just going with this for now.
         release = '%s.%s' % (commits, sha)
-        version = version.replace('rc', '~rc')
+        for milestone in ('beta', 'rc'):
+            version = version.replace(milestone, '~%s' % milestone)
     else:
         # This was a tagged ref. Follow the Debian pkging guidelines
         release = '2redhat1'
-        if 'rc' in version:
-            version = version.replace('rc', '~rc')
+        for milestone in ('beta', 'rc'):
+            version = version.replace(milestone, '~%s' % milestone)
     return '%s-%s' % (version, release)
 
 
@@ -404,7 +407,7 @@ all_bzs = find_all_bzs(bzapi, project, OLD, NEW)
 print('================')
 print(rpm_changelog(NEW, all_bzs))
 
-if 'rc' not in NEW:
+if 'rc' not in NEW and 'beta' not in NEW:
     print('Command for RHEL dist-git:')
     print('================')
     print(rdopkg_command(NEW, all_bzs))
