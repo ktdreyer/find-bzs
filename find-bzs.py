@@ -19,8 +19,8 @@ Find Bugzilla numbers that correlate to new upstream tags in GitHub.
 # TODO: auto-determine "NEW" from git-decribe
 #OLD = 'v3.1.8'
 #NEW = 'v3.1.9'
-OLD = 'v3.2.0beta3'
-NEW = 'v3.2.0beta5'
+OLD = 'v3.2.0beta7'
+NEW = 'v3.2.0beta8'
 
 GITHUBURL = 'https://github.com/'
 GITHUBAPI = 'https://api.github.com/'
