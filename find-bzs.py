@@ -6,6 +6,7 @@ import subprocess
 import os
 import re
 import requests
+import sys
 from bugzilla import Bugzilla
 from textwrap import TextWrapper, dedent
 import time
@@ -38,6 +39,13 @@ class GitHubProjectError(Exception):
     pass
 
 
+def check_output(*args, **kwargs):
+    result = subprocess.check_output(*args, **kwargs)
+    if sys.version_info >= (3, 0):
+        return result.decode('utf-8')
+    return result
+
+
 def github_project(remote):
     """
     returns the GitHub project name for a Git clone in cwd.
@@ -49,7 +57,7 @@ def github_project(remote):
     :raises: GitHubProjectError if the named remote does not look like GitHub.
     """
     cmd = ['git', 'remote', 'get-url', remote]
-    url = subprocess.check_output(cmd).strip()
+    url = check_output(cmd).strip()
     m = re.match('git@github.com:(.+)', url)
     if not m:
         m = re.match('(?:https|git)://github.com/(.+)', url)
@@ -87,7 +95,7 @@ def find_shas(old, new):
     """
     cmd = ['git', 'log', '%s..%s' % (old, new), '--no-decorate']
     # print(' '.join(cmd))
-    output = subprocess.check_output(cmd)
+    output = check_output(cmd)
     shas = set()
     for line in output.strip().split("\n"):
         # Direct sha1 for this commit:
@@ -148,7 +156,7 @@ def rpm_version(ref):
     # eg "3.0.0-1"
     # or "3.0.0-0.1.rc1"
     cmd = ['git', 'describe', '--tags', ref]
-    gitdescribe = subprocess.check_output(cmd).strip()
+    gitdescribe = check_output(cmd).strip()
     try:
         (version, commits, sha) = gitdescribe.split('-')
     except ValueError:
@@ -181,7 +189,7 @@ def deb_version(ref):
     # eg "3.0.0-2redhat1"
     # or "3.0.0~rc1-2redhat1"
     cmd = ['git', 'describe', '--tags', ref]
-    gitdescribe = subprocess.check_output(cmd).strip()
+    gitdescribe = check_output(cmd).strip()
     try:
         (version, commits, sha) = gitdescribe.split('-')
     except ValueError:
@@ -327,7 +335,7 @@ def rpm_changelog(version, all_bzs):
     changes = 'Update to %s' % version
     if not version.startswith('v'):
         cmd = ['git', 'rev-parse', version]
-        ref = subprocess.check_output(cmd).strip()
+        ref = check_output(cmd).strip()
         changes = '%s (%s)' % (changes, ref)
     if all_bzs:
         bz_strs = ['rhbz#%d' % bz for bz in all_bzs]
