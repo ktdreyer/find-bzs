@@ -22,8 +22,8 @@ Find Bugzilla numbers that correlate to new upstream tags in GitHub.
 #NEW = 'v3.0.47'
 #OLD = 'v3.1.9'
 #NEW = 'v3.1.10'
-OLD = 'v3.2.0rc1'
-NEW = 'v3.2.0rc2'
+OLD = 'v3.2.0'
+NEW = 'v3.2.1'
 
 GITHUBURL = 'https://github.com/'
 GITHUBAPI = 'https://api.github.com/'
