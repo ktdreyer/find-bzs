@@ -25,6 +25,11 @@ Clone ceph-ansible from GitHub::
 (If you've already cloned ceph-ansible, just ``git pull`` to fetch all the
 latest updates and tags.)
 
+Edit the ``find-bzs.py`` script so that the ceph-ansible git tags are reflected
+in the "OLD" and "NEW" variables:
+
+    $ vim ../find-bzs/find-bzs.py
+
 Now run the ``find-bzs.py`` script in your up-to-date clone directory::
 
     $ ../find-bzs/find-bzs.py
