@@ -256,6 +256,7 @@ def github_get(url):
         # print('Looking up GitHub API Rate remaining')
         rl_url = GITHUBAPI + 'rate_limit'
         r = requests.get(rl_url, headers=headers)
+        r.raise_for_status()
         data = r.json()
         rate_limit = data['resources']['search']['remaining']
     if rate_limit == 0:
